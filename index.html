@@ -190,7 +190,7 @@
         0 15px 40px rgba(0, 0, 0, 0.15);
     }
 
-    .video-frame video {
+    .video-frame iframe {
       position: absolute;
 
       inset: 0;
@@ -199,8 +199,6 @@
       height: 100%;
 
       border: 0;
-
-      object-fit: contain;
 
       background: #000;
     }
@@ -521,6 +519,7 @@
       }
     }
   </style>
+  <script type="text/javascript" src="https://assets.mediadelivery.net/playerjs/player-0.1.0.min.js"></script>
 </head>
 
 <body>
@@ -551,24 +550,18 @@
       <section class="main-card">
 
         <!-- ==================================================
-             VÍDEO
-
-             ARQUIVO LOCAL NO REPOSITÓRIO (mesma pasta do index.html):
-             videojoin.mp4
+             VÍDEO BUNNY STREAM
              ================================================== -->
 
         <div class="video-frame">
 
-          <video
-            id="mainVideo"
-            controls
-            playsinline
-            preload="metadata"
-            poster=""
-          >
-            <source src="videojoin.mp4" type="video/mp4">
-            Seu navegador não suporta reprodução de vídeo HTML5.
-          </video>
+          <iframe
+            id="bunny-stream-embed"
+            src="https://player.mediadelivery.net/embed/732322/742acd72-3d14-48ee-bb04-cd32689a6077?autoplay=false&loop=false&muted=false&preload=true&responsive=true"
+            loading="lazy"
+            allow="accelerometer;gyroscope;autoplay;encrypted-media;picture-in-picture;fullscreen;"
+            allowfullscreen="true">
+          </iframe>
 
         </div>
 
@@ -594,42 +587,42 @@
               VISIT THE OFFICIAL WEBSITE
             </a>
 
+          </div>
 
-            <!-- ==================================================
-                 TEXTO ABAIXO DO BOTÃO
-                 ================================================== -->
 
-            <div class="support-copy">
+          <!-- ==================================================
+               TEXTO SEMPRE VISÍVEL, INDEPENDENTE DO BOTÃO
+               ================================================== -->
 
-              <p>
-                A simple daily approach has been developed to help support
-                joint comfort, mobility, and healthy movement as you age.
-              </p>
+          <div class="support-copy">
 
-              <p>
-                This easy once-daily routine focuses on supporting the natural
-                lubrication your joints depend on to move smoothly and
-                comfortably.
-              </p>
+            <p>
+              A simple daily approach has been developed to help support
+              joint comfort, mobility, and healthy movement as you age.
+            </p>
 
-              <p>
-                Its formula includes a patented ingredient designed to support
-                healthy hyaluronan levels and natural joint lubrication.
-              </p>
+            <p>
+              This easy once-daily routine focuses on supporting the natural
+              lubrication your joints depend on to move smoothly and
+              comfortably.
+            </p>
 
-              <p>
-                Created for adults who want to stay active and move with
-                greater confidence, this approach fits easily into your daily
-                routine.
-              </p>
+            <p>
+              Its formula includes a patented ingredient designed to support
+              healthy hyaluronan levels and natural joint lubrication.
+            </p>
 
-            </div>
-
-            <p class="continue-note">
-              Click the button above to continue to the product website.
+            <p>
+              Created for adults who want to stay active and move with
+              greater confidence, this approach fits easily into your daily
+              routine.
             </p>
 
           </div>
+
+          <p class="continue-note">
+            Click the button above to continue to the product website.
+          </p>
 
         </div>
 
@@ -659,30 +652,23 @@
   <script>
     /*
     ============================================================
-    CONFIGURAÇÃO DO DELAY DO BOTÃO
+    BOTÃO APARECE QUANDO O VÍDEO CHEGAR A 3:00 DE REPRODUÇÃO
     ============================================================
 
-    0      = botão aparece imediatamente
-    10000  = botão aparece após 10 segundos
-    600000 = botão aparece após 10 minutos
-
-    ALTERE SOMENTE O NÚMERO ABAIXO.
+    180 = 3 minutos de vídeo assistido/reproduzido.
+    Se o usuário pausar antes dos 3:00, o botão continua escondido.
     */
 
-    const buttonDelay = 0;
-
-
-    /*
-    ============================================================
-    NÃO É NECESSÁRIO ALTERAR O CÓDIGO ABAIXO
-    ============================================================
-    */
+    const ctaAppearAtSeconds = 180;
 
     const ctaWrapper = document.getElementById("ctaWrapper");
+    const bunnyIframe = document.getElementById("bunny-stream-embed");
+    let ctaShown = false;
 
     function showCTA() {
-      if (!ctaWrapper) return;
+      if (!ctaWrapper || ctaShown) return;
 
+      ctaShown = true;
       ctaWrapper.style.display = "block";
 
       ctaWrapper.animate(
@@ -704,10 +690,30 @@
       );
     }
 
-    if (buttonDelay <= 0) {
-      showCTA();
-    } else {
-      setTimeout(showCTA, buttonDelay);
+    if (bunnyIframe && window.playerjs) {
+      const bunnyPlayer = new playerjs.Player(bunnyIframe);
+
+      bunnyPlayer.on("timeupdate", (timingData) => {
+        let data = timingData;
+
+        if (typeof timingData === "string") {
+          try {
+            data = JSON.parse(timingData);
+          } catch (error) {
+            return;
+          }
+        }
+
+        const currentTime = Number(
+          data?.seconds ??
+          data?.currentTime ??
+          0
+        );
+
+        if (currentTime >= ctaAppearAtSeconds) {
+          showCTA();
+        }
+      });
     }
   </script>
 
